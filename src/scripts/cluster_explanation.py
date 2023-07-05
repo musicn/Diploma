@@ -61,3 +61,24 @@ class MEDOID:
     
     def reset(self):
         self.medoid = []
+
+class CLASS_PROB:
+    def __init__(self):
+        self.class_probs = []
+
+    def calc_probs(self, y, labels):
+        for cluster in np.unique(labels):
+            yc = (labels == cluster) * 1
+            class_labels = y[yc == 1]
+            prob_dict = dict()
+            for class_l in np.unique(class_labels):
+                count = np.count_nonzero(class_labels == class_l)
+                prob_dict[class_l] = count/len(class_labels)
+            print(prob_dict)
+            self.class_probs.append(prob_dict)
+    
+    def get_probs(self):
+        return self.class_probs
+    
+    def reset(self):
+        self.class_probs = []

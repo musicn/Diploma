@@ -88,12 +88,19 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
 
     # vsako gruco opisi s pravili (one vs all)
     rl = ce.RULES(0)
-    pravila = rl.calc_rules(X, maxLabels)
+    rl.calc_rules(X, maxLabels)
+    pravila = rl.get_rules()
+    accuracy = rl.get_accuracy()
 
     # za vsak cluster najdi medoid
     med_obj = ce.MEDOID('euclidean')
     med_obj.calc_medoid(X, maxLabels)
-    med_obj.get_medoid()
+    medoids = med_obj.get_medoid()
+
+    # class probabilities for every cluster
+    prob_obj = ce.CLASS_PROB()
+    prob_obj.calc_probs(y, maxLabels)
+    probs = prob_obj.get_probs()
 
 
 def main1():

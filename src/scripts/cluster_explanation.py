@@ -40,16 +40,24 @@ class RULES:
 class MEDOID:
     def __init__(self, distance_metric):
         self.distance_metric = distance_metric
-        self.medoid = None
+        self.medoid = []
 
-    def calc_medoid(self, X):
-        if self.distance_metric == 'euclidean':    
-            distances = cdist(X, X, metric='euclidean')
-        total_distances = np.sum(distances, axis=1)
-        medoid_index = np.argmin(total_distances)
-        medoid = X[medoid_index]
-        print(medoid)
-        self.medoid = medoid
+    def calc_medoid(self, X, labels):
+        for cluster in np.unique(labels):
+            yc = (labels == cluster) * 1
+            indices = np.where(yc == 1)[0]
+            X1 = np.copy(X)
+            X1 = X1[indices,:]
+            if self.distance_metric == 'euclidean':    
+                distances = cdist(X1, X1, metric='euclidean')
+            total_distances = np.sum(distances, axis=1)
+            medoid_index = np.argmin(total_distances)
+            medoid = X1[medoid_index]
+            print(medoid)
+            self.medoid.append(medoid)
     
     def get_medoid(self):
         return self.medoid
+    
+    def reset(self):
+        self.medoid = []

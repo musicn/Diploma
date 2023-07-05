@@ -91,7 +91,9 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
     pravila = rl.calc_rules(X, maxLabels)
 
     # za vsak cluster najdi medoid
-    
+    med_obj = ce.MEDOID('euclidean')
+    med_obj.calc_medoid(X, maxLabels)
+    med_obj.get_medoid()
 
 
 def main1():

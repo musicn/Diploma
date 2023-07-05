@@ -1,0 +1,2 @@
+->primerjava cluster algoritmov brez ground trutha kot so kmeans in dbscan (problem outlierjev)
+->spomni se metriko ki uposteva procent dodeljenih samplov v cluster in silhuette score

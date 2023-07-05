@@ -1,0 +1,17 @@
+https://towardsdatascience.com/how-to-ensemble-clustering-algorithms-bf78d7602265
+
+### source code za ensemble clustering
+https://github.com/huangdonghere/MDEC
+
+### combinacija clustering shap
+https://www.aidancooper.co.uk/supervised-clustering-shap-values/
+
+
+#DBSCAN params estimation
+https://medium.com/@tarammullin/dbscan-parameter-estimation-ff8330e3a3bd
+eps estimation
+https://towardsdatascience.com/detecting-knee-elbow-points-in-a-graph-d13fc517a63c
+
+#DBCV metric
+https://towardsdatascience.com/how-to-evaluate-clustering-performance-without-ground-truth-labels-9c9792ec1c54
+article: https://www.dbs.ifi.lmu.de/~zimek/publications/SDM2014/DBCV.pdf

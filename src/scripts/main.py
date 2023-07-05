@@ -70,6 +70,8 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
     for ix1 in range(11):
         if ix1 < 2: continue
         
+        # ali moras normalizirat podatke? density based-niti ne distance based- mogoc
+
         # gruci podatke
         clustering_algo.cluster(X, y, ix1)
         #clustering_algo.plot()
@@ -91,8 +93,9 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
     rl.calc_rules(X, maxLabels)
     pravila = rl.get_rules()
     accuracy = rl.get_accuracy()
+    # visual area of rules on plot
 
-    # za vsak cluster najdi medoid
+    # za vsak cluster najdi medoid !!! add class variable!
     med_obj = ce.MEDOID('euclidean')
     med_obj.calc_medoid(X, maxLabels)
     medoids = med_obj.get_medoid()
@@ -101,6 +104,18 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
     prob_obj = ce.CLASS_PROB()
     prob_obj.calc_probs(y, maxLabels)
     probs = prob_obj.get_probs()
+
+    # shap for feature importance
+
+    # mean, standard deviation
+
+    # subgroup discovery (CN2-SD or SD-Map - uporabljata lift in confidence)
+    # CN2-SD decision rules
+    # SD-Map divides cluster with regard to target variable
+
+    # density distribution - mogoc sam statistiko od zgor
+
+    # compare cluster of current sample to others
 
 
 def main1():

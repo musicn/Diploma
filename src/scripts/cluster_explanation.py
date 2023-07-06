@@ -42,17 +42,19 @@ class MEDOID:
         self.distance_metric = distance_metric
         self.medoid = []
 
-    def calc_medoid(self, X, labels):
+    def calc_medoid(self, X, y, labels):
         for cluster in np.unique(labels):
             yc = (labels == cluster) * 1
             indices = np.where(yc == 1)[0]
             X1 = np.copy(X)
             X1 = X1[indices,:]
+            y1 = np.copy(y)
+            y1 = y1[indices]
             if self.distance_metric == 'euclidean':    
                 distances = cdist(X1, X1, metric='euclidean')
             total_distances = np.sum(distances, axis=1)
             medoid_index = np.argmin(total_distances)
-            medoid = X1[medoid_index]
+            medoid = [X1[medoid_index], y1[medoid_index]]
             print(medoid)
             self.medoid.append(medoid)
     

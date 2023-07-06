@@ -12,6 +12,17 @@ class SHAP:
     def calc_shap_val(self, X_train):
         return self.explainer.shap_values(X_train)
     
+    def calc_shap_val_clusters(self, X_train, labels):
+        shap_clusters = []
+        Xs = []
+        for cluster in np.unique(labels):
+            # create target variable for individual cluster / all same cluster labels are set to one for this for loop
+            yc = (labels == cluster) * 1
+            Xf = X_train[yc == 1]
+            shap_clusters.append(self.explainer.shap_values(Xf))
+            Xs.append(Xf)
+        return shap_clusters, Xs
+    
     def plot_force(self, shap_val, X):
         shap.save_html('force_plot.html', shap.force_plot(self.explainer.expected_value, shap_val, X))
 

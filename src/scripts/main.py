@@ -1,9 +1,11 @@
 import clustering as cls
 import data
-#import my_shap
+import my_shap
 import model
 import cluster_explanation as ce
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, f1_score
+import numpy as np
 
 D1 = 'artificial_binary_3d_1'
 D2 = 'artificial_binary_2d_1'
@@ -64,6 +66,28 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
     X = data_class.X
     y = data_class.y
     
+    # split train, test set if predicting
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
+
+    # sample that will be explained
+    random_int = np.random.randint(0, len(X_test)-1)
+
+    # train a model
+    xgb_class = model.XGBOOST()
+    xgb_class.fit_xgb(X_train, y_train)
+    xgb_model = xgb_class.return_model()
+    
+    # predict X_test
+    y_pred = xgb_class.predict_xgb(X_test)
+
+    # Calculate classification accuracy
+    ca = accuracy_score(y_test, y_pred)
+    print("Classification Accuracy:", ca)
+
+    # Calculate F1 score
+    f1 = f1_score(y_test, y_pred)
+    print("F1 Score:", f1)
+
     # stevilo gruc
     maxLabels = None
     maxScore = -99999
@@ -73,7 +97,7 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
         # ali moras normalizirat podatke? density based-niti ne distance based- mogoc
 
         # gruci podatke
-        clustering_algo.cluster(X, y, ix1)
+        clustering_algo.cluster(X_train, y_train, ix1)
         #clustering_algo.plot()
 
         # izberi oznake najboljsega grucenja
@@ -90,32 +114,37 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
 
     # vsako gruco opisi s pravili (one vs all)
     rl = ce.RULES(0)
-    rl.calc_rules(X, maxLabels)
+    rl.calc_rules(X_train, maxLabels)
     pravila = rl.get_rules()
     accuracy = rl.get_accuracy()
     # visual area of rules on plot
 
     # za vsak cluster najdi medoid !!! add class variable!
     med_obj = ce.MEDOID('euclidean')
-    med_obj.calc_medoid(X, maxLabels)
-    medoids = med_obj.get_medoid()
+    med_obj.calc_medoid(X_train, y_train, maxLabels)
+    medoids = np.array(med_obj.get_medoid())
 
     # class probabilities for every cluster
     prob_obj = ce.CLASS_PROB()
-    prob_obj.calc_probs(y, maxLabels)
+    prob_obj.calc_probs(y_train, maxLabels)
     probs = prob_obj.get_probs()
 
     # shap for feature importance
+    shap_class = my_shap.SHAP(xgb_model)
+    # unseen sample
+    shap_values1 = shap_class.calc_shap_val(np.reshape(X_test[random_int], (1, -1)))
+    # medoids
+    shap_values2 = shap_class.calc_shap_val(np.vstack(medoids[:,0]))
+    # clusters
+    shap_values3, Xs = shap_class.calc_shap_val_clusters(X_train, maxLabels)
+    for ix3, cluster_shap in enumerate(shap_values3):
+        shap_class.plot_summary(cluster_shap, Xs[ix3])
 
     # mean, standard deviation
 
-    # subgroup discovery (CN2-SD or SD-Map - uporabljata lift in confidence)
-    # CN2-SD decision rules
-    # SD-Map divides cluster with regard to target variable
+    # subgroup discovery in cluster
 
-    # density distribution - mogoc sam statistiko od zgor
-
-    # compare cluster of current sample to others
+    # compare cluster of current sample to others, poglej subgroup pravila
 
 
 def main1():

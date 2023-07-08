@@ -231,3 +231,22 @@ def plot2dUMAP_artificial_binary_5d_1(X, y):
     plt.ylabel('UMAP2')
     plt.title('UMAP - 2D: artificial binary 5d data')
     plt.show()
+
+### all concepts in one dataset 2d 4 classes
+
+def construct_artificial_4c_2d_all():
+    data = read_txt('D:\\FRI\\Diploma\\data\\artificial_data_all.txt')
+    for ix, row in enumerate(data):
+        data[ix] = data[ix].replace('\n', '').split(', ')
+    X = np.array(data)[:,:2].astype(np.float64)
+    y = np.array(data)[:,2].astype(np.int64)
+    return X, y
+
+def plot_artificial_4c_2d_all(X, y):
+    plt.figure(figsize=(8, 6))
+    plt.scatter(X[:, 0], X[:, 1], c=y, cmap='coolwarm')
+    plt.xlabel('Feature 1')
+    plt.ylabel('Feature 2')
+    plt.title('Synthetic Dataset 4 classes - all concepts')
+    plt.colorbar()
+    plt.show()

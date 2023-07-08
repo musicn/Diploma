@@ -313,20 +313,10 @@ class HDBSCAN_C:
             self.n_clusters.append(len(set(labels)) - 1)
             self.percentage_explained.append(1 - (np.count_nonzero(labels == -1)/len(labels)))
 
-    def get_labels(self):
-        return self.labels
+    def get_labels(self, ix):
+        return self.labels[ix]
     
     def evaluate_silhuette_avg(self):
-        # points that have -1 are outliers and do not belong to any cluster -> throw them out
-        # valid_indices = np.where(self.labels >= 0)[0]
-        # X_filtered = self.X[valid_indices]
-        # labels_filtered = self.labels[self.labels != -1]
-        # try:
-        #     return [silhouette_score(X_filtered, labels_filtered)]
-        # except ValueError:  #raised if `y` is empty.
-        #     #print('poglej X in results')
-        #     return [-9999]
-        # points that have -1 are outliers and do not belong to any cluster -> throw them out
         ret = []
         for ix in range(len(self.labels)):
             valid_indices = np.where(self.labels[ix] >= 0)[0]
@@ -352,11 +342,11 @@ class HDBSCAN_C:
         # points that have -1 are outliers and do not belong to any cluster -> throw them out
         ret = []
         for ix in range(len(self.labels)):
-            valid_indices = np.where(self.labels[ix] >= 0)[0]
-            X_filtered = self.X[valid_indices]
-            labels_filtered = self.labels[ix][self.labels[ix] != -1]
+            # valid_indices = np.where(self.labels[ix] >= 0)[0]
+            # X_filtered = self.X[valid_indices]
+            # labels_filtered = self.labels[ix][self.labels[ix] != -1]
             try:
-                dbcv_score = validity.validity_index(X_filtered, labels_filtered)
+                dbcv_score = validity.validity_index(self.X, self.labels[ix])
             except ValueError:  #raised if `y` is empty.
                 #print('poglej X in results')
                 dbcv_score = -9999

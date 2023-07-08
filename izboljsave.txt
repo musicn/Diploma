@@ -1,2 +1,4 @@
 ->primerjava cluster algoritmov brez ground trutha kot so kmeans in dbscan (problem outlierjev)
 ->spomni se metriko ki uposteva procent dodeljenih samplov v cluster in silhuette score
+->SD-Map to further divide clusters into interesting subgroups
+->ko se ponavljajo featurji za pravila, da imas algoritem ki ti pove ali je to ponavlajoce pravilo dobro ali je ze opisalo neko podskupino(sahovnica)

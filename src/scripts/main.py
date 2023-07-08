@@ -14,7 +14,8 @@ D4 = 'artificial_binary_2d_3'
 D5 = 'hearth_disease_2d'
 D6 = 'artificial_binary_2d_4'
 D7 = 'artificial_binary_5d_1'
-datasets = [D2] # D1,D2,D3,D4,D5,D6,D7
+D8 = 'artificial_4c_2d_all'
+datasets = [D8] # D1,D2,D3,D4,D5,D6,D7
 clustering_algos = [cls.HDBSCAN_C()] # cls.MDEC(),cls.KMEANS(),cls.DBSCAN_C(),cls.HDBSCAN_C()
 
 def get_data():
@@ -71,7 +72,12 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
 
     # sample that will be explained
     random_int = np.random.randint(0, len(X_test)-1)
-
+    s1 = np.array([6.1,17.3])
+    s2 = np.array([6.0,3.3])
+    s3 = np.array([10.0,10.0])
+    s4 = np.array([14.0,15.3])
+    s5 = np.array([17.4,5.1])
+    
     # train a model
     xgb_class = model.XGBOOST()
     xgb_class.fit_xgb(X_train, y_train)
@@ -85,7 +91,7 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
     print("Classification Accuracy:", ca)
 
     # Calculate F1 score
-    f1 = f1_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred, average='micro')
     print("F1 Score:", f1)
 
     # stevilo gruc
@@ -98,7 +104,7 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
 
         # gruci podatke
         clustering_algo.cluster(X_train, y_train, ix1)
-        #clustering_algo.plot()
+        clustering_algo.plot()
 
         # izberi oznake najboljsega grucenja
         if metric == 'silhuette':
@@ -109,15 +115,28 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
                     maxLabels = clustering_algo.get_labels(ix2)
         if metric == 'dbcv':
             dbcv_scores = clustering_algo.evaluate_dbcv()
+            for ix2, score in enumerate(dbcv_scores):
+                if score > maxScore:
+                    maxScore = score
+                    maxLabels = clustering_algo.get_labels(ix2)
         
         clustering_algo.reset()
 
+    #filtriri -1 pr density based algoritmih
+
     # vsako gruco opisi s pravili (one vs all)
     rl = ce.RULES(0)
-    rl.calc_rules(X_train, maxLabels)
-    pravila = rl.get_rules()
-    accuracy = rl.get_accuracy()
+    rl.calc_rules_outCluster(X_train, maxLabels)
+    pravilaOut = rl.get_rules_outCluster()
+    accuracyOut = rl.get_accuracy_outCluster()
     # visual area of rules on plot
+    # mas predict opcijo
+
+    # razrede v gruci opisi s pravili, ce bo shit subgroup discovery -> pri sahovnici vec pravil
+    rl.calc_rules_inCLuster(X_train, y_train, maxLabels)
+    pravilaIn = rl.get_rules_inCluster()
+    accuracyIn = rl.get_accuracy_inCluster()
+    # mas predict opcijo
 
     # za vsak cluster najdi medoid !!! add class variable!
     med_obj = ce.MEDOID('euclidean')
@@ -138,20 +157,18 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
     # clusters
     shap_values3, Xs = shap_class.calc_shap_val_clusters(X_train, maxLabels)
     for ix3, cluster_shap in enumerate(shap_values3):
-        shap_class.plot_summary(cluster_shap, Xs[ix3])
+        shap_class.plot_summary(cluster_shap, Xs[ix3])  # force plot alpa bar plot zameni ta je shit
 
-    # mean, standard deviation
+    # testne primere klasificiraj in vmesti v gruco
 
-    # subgroup discovery in cluster
-
-    # compare cluster of current sample to others, poglej subgroup pravila
+    # compare cluster of current sample to others, zracunaj ksne razdalje?
 
 
 def main1():
     #test_clustering_algorithms()
     m1 = 'silhuette'
     m2 = 'dbcv'
-    subgroup_discovery_explanation(D2, cls.KMEANS(), m1)
+    subgroup_discovery_explanation(D8, cls.KMEANS(), m1)
 
 
 # def main2():

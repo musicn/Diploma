@@ -4,14 +4,19 @@ sys.modules['sklearn.externals.six'] = six
 from skrules import SkopeRules
 import numpy as np
 from scipy.spatial.distance import cdist
+import pysubgroup as ps
+import pandas as pd
 
 class RULES:
     def __init__(self, library_num):
         self.library_num = library_num
-        self.rules = []
-        self.accuracy = []
+        self.rulesOut = []
+        self.accuracyOut = []
+        self.rulesIn = []
+        self.accuracyIn = []
+        
 
-    def calc_rules(self, X, labels):
+    def calc_rules_outCluster(self, X, labels):
         if self.library_num == 0:
             for cluster in np.unique(labels):
                 # create target variable for individual cluster / all same cluster labels are set to one for this for loop
@@ -21,21 +26,54 @@ class RULES:
                 sr = SkopeRules(max_depth=4).fit(X, yc)
                 # print best decision rule
                 print(cluster, sr.rules_[0][0])
-                self.rules.append(sr.rules_[0][0])
+                self.rulesOut.append(sr.rules_[0][0])
                 # print precision and recall of best decision rule
                 print(f"Precision: {sr.rules_[0][1][0]:.2f}",
                     f"Recall   : {sr.rules_[0][1][1]:.2f}\n")
-                self.accuracy.append((sr.rules_[0][1][0],sr.rules_[0][1][1]))
+                self.accuracyOut.append((sr.rules_[0][1][0],sr.rules_[0][1][1]))
 
-    def get_rules(self):
-        return self.rules
+    def calc_rules_inCLuster(self, X, y, labels):
+        for cluster in np.unique(labels):
+            yc = (labels == cluster) * 1
+            indices = np.where(yc == 1)[0]
+            X1 = np.copy(X)
+            X1 = X1[indices,:]
+            y1 = np.copy(y)
+            y1 = y1[indices]
+            if len(np.unique(y1)) == 1:
+                print(cluster, 'all samples of class ' + str(y1[0]))
+                self.rulesIn.append('all samples of class ' + str(y1[0]))
+                self.accuracyIn.append((1.0,1.0))
+                continue
+            print(cluster)
+            for class_label in np.unique(y1):
+                yl = (y1 == class_label) * 1
+                sr = SkopeRules(max_depth=None,max_depth_duplication=20,recall_min=0.05,n_estimators=30).fit(X1, yl)
+                # print best decision rule
+                print(class_label, sr.rules_[0][0])
+                self.rulesIn.append(sr.rules_[0][0])
+                # print precision and recall of best decision rule
+                print(f"Precision: {sr.rules_[0][1][0]:.2f}",
+                    f"Recall   : {sr.rules_[0][1][1]:.2f}\n")
+                self.accuracyIn.append((sr.rules_[0][1][0],sr.rules_[0][1][1]))
+
+    def get_rules_outCluster(self):
+        return self.rulesOut
     
-    def get_accuracy(self):
-        return self.accuracy
+    def get_rules_inCluster(self):
+        return self.rulesIn
+
+    def get_accuracy_outCluster(self):
+        return self.accuracyOut
     
+    def get_accuracy_inCluster(self):
+        return self.accuracyIn
+
     def reset(self):
-        self.rules = []
-        self.accuracy = []
+        self.rulesOut = []
+        self.accuracyOut = []
+        self.rulesIn = []
+        self.accuracyIn = []
 
 class MEDOID:
     def __init__(self, distance_metric):
@@ -84,3 +122,20 @@ class CLASS_PROB:
     
     def reset(self):
         self.class_probs = []
+
+# class SUBGROUP_DISCOVERY:
+#     def __init__(self):
+#         self.rules = []
+
+#     def calc_rules(self, X, y, labels):
+#         for cluster in np.unique(labels):
+#             yc = (labels == cluster) * 1
+#             indices = np.where(yc == 1)[0]
+#             X1 = np.copy(X)
+#             X1 = X1[indices,:]
+#             y1 = np.copy(y)
+#             y1 = y1[indices]
+#             data = np.hstack((X1, y1.reshape(-1, 1)))
+#             selectors = ps.create_selectors(data, ignore=[-1])
+#             result = ps.BeamSearch().execute(data, min_quality=0.5, beam_width=5)
+#             a=5

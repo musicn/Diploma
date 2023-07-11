@@ -42,20 +42,31 @@ class RULES:
             y1 = y1[indices]
             if len(np.unique(y1)) == 1:
                 print(cluster, 'all samples of class ' + str(y1[0]))
-                self.rulesIn.append('all samples of class ' + str(y1[0]))
-                self.accuracyIn.append((1.0,1.0))
+                self.rulesIn.append([[np.unique(y1)[0],'all samples of class ' + str(y1[0])]])
+                self.accuracyIn.append([[np.unique(y1)[0],(1.0,1.0)]])
                 continue
             print(cluster)
+            rules_temp = []
+            acc_temp = []
             for class_label in np.unique(y1):
                 yl = (y1 == class_label) * 1
                 sr = SkopeRules(max_depth=None,max_depth_duplication=20,recall_min=0.05,n_estimators=30).fit(X1, yl)
                 # print best decision rule
-                print(class_label, sr.rules_[0][0])
-                self.rulesIn.append(sr.rules_[0][0])
+                #print(class_label, sr.rules_[0][0])
+                #self.rulesIn.append(sr.rules_[0][0])
                 # print precision and recall of best decision rule
-                print(f"Precision: {sr.rules_[0][1][0]:.2f}",
-                    f"Recall   : {sr.rules_[0][1][1]:.2f}\n")
-                self.accuracyIn.append((sr.rules_[0][1][0],sr.rules_[0][1][1]))
+                #print(f"Precision: {sr.rules_[0][1][0]:.2f}",
+                #    f"Recall   : {sr.rules_[0][1][1]:.2f}\n")
+                #self.accuracyIn.append((sr.rules_[0][1][0],sr.rules_[0][1][1]))
+                t1 = []
+                t2 = []
+                for ix in range(len(sr.rules_)):
+                    t1.append([class_label,sr.rules_[ix][0]])
+                    t2.append([class_label,(sr.rules_[ix][1][0],sr.rules_[ix][1][1])])
+                rules_temp.append(t1)
+                acc_temp.append(t2)
+            self.rulesIn.append(rules_temp)
+            self.accuracyIn.append(acc_temp)
 
     def get_rules_outCluster(self):
         return self.rulesOut

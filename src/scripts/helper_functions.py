@@ -247,6 +247,6 @@ def plot_artificial_4c_2d_all(X, y):
     plt.scatter(X[:, 0], X[:, 1], c=y, cmap='coolwarm')
     plt.xlabel('Feature 1')
     plt.ylabel('Feature 2')
-    plt.title('Synthetic Dataset 4 classes - all concepts')
+    plt.title('Synthetic Dataset 3 classes - multiconcepts')
     plt.colorbar()
     plt.show()

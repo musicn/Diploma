@@ -140,6 +140,7 @@ class MDEC:
 
 class KMEANS:
     def __init__(self):
+        self.model = None
         self.X = None
         self.labels = []
         self.centers = []
@@ -150,11 +151,15 @@ class KMEANS:
         self.X = np.copy(data_matrix)
         kmeans = KMeans(n_clusters=num_clusters, n_init=10)
         kmeans.fit(self.X)
+        self.model = kmeans
         self.labels.append(kmeans.labels_)
         self.centers.append(kmeans.cluster_centers_)
 
     def get_labels(self, ix):
         return self.labels[ix]
+    
+    def predict(self, X):
+        return self.model.predict(X)
     
     def evaluate_silhuette_avg(self):
         try:
@@ -171,6 +176,7 @@ class KMEANS:
             return [-9999]
 
     def reset(self):
+        self.model = None
         self.X = None
         self.labels = []
         self.centers = []
@@ -258,11 +264,11 @@ class DBSCAN_C:
         # points that have -1 are outliers and do not belong to any cluster -> throw them out
         ret = []
         for ix in range(len(self.labels)):
-            valid_indices = np.where(self.labels[ix] >= 0)[0]
-            X_filtered = self.X[valid_indices]
-            labels_filtered = self.labels[ix][self.labels[ix] != -1]
+            #valid_indices = np.where(self.labels[ix] >= 0)[0]
+            #X_filtered = self.X[valid_indices]
+            #labels_filtered = self.labels[ix][self.labels[ix] != -1]
             try:
-                dbcv_score = validity.validity_index(X_filtered, labels_filtered)
+                dbcv_score = validity.validity_index(self.X, self.labels[ix])
             except ValueError:  #raised if `y` is empty.
                 #print('poglej X in results')
                 dbcv_score = -9999

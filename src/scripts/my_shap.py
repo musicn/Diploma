@@ -29,13 +29,16 @@ class SHAP:
     def plot_summary(self, shap_val, X):
         shap.summary_plot(shap_val, X)
 
+    def plot_bar(self, shap_val):
+        shap.bar_plot(shap_val)
+
     def plot_dependence(self, shap_val, X, feature_index):
         shap.dependence_plot(feature_index, shap_val, X)
         plt.show()
 
     def plot_clusters_2d(self, shap_val, y):
-        colors = np.where(np.array(y) == 0, 'blue', 'red')
-        plt.scatter(shap_val[:,0], shap_val[:,1], c=colors)
+        #colors = np.where(np.array(y) == 0, 'blue', 'red')
+        plt.scatter(shap_val[:,0], shap_val[:,1], c=y)
         plt.show()
 
     def plot_clusters_PCA(self, shap_val, y):

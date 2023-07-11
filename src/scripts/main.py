@@ -15,7 +15,7 @@ D5 = 'hearth_disease_2d'
 D6 = 'artificial_binary_2d_4'
 D7 = 'artificial_binary_5d_1'
 D8 = 'artificial_4c_2d_all'
-datasets = [D8] # D1,D2,D3,D4,D5,D6,D7
+datasets = [D2] # D1,D2,D3,D4,D5,D6,D7
 clustering_algos = [cls.HDBSCAN_C()] # cls.MDEC(),cls.KMEANS(),cls.DBSCAN_C(),cls.HDBSCAN_C()
 
 def get_data():
@@ -97,6 +97,7 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
     # stevilo gruc
     maxLabels = None
     maxScore = -99999
+    maxModel = None
     for ix1 in range(11):
         if ix1 < 2: continue
         
@@ -113,16 +114,18 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
                 if score > maxScore:
                     maxScore = score
                     maxLabels = clustering_algo.get_labels(ix2)
+                    maxModel = clustering_algo.model
         if metric == 'dbcv':
             dbcv_scores = clustering_algo.evaluate_dbcv()
             for ix2, score in enumerate(dbcv_scores):
                 if score > maxScore:
                     maxScore = score
                     maxLabels = clustering_algo.get_labels(ix2)
+                    maxModel = clustering_algo.model
         
         clustering_algo.reset()
 
-    #filtriri -1 pr density based algoritmih
+    # filtriri -1 pr density based algoritmih !!!
 
     # vsako gruco opisi s pravili (one vs all)
     rl = ce.RULES(0)
@@ -156,19 +159,66 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
     shap_values2 = shap_class.calc_shap_val(np.vstack(medoids[:,0]))
     # clusters
     shap_values3, Xs = shap_class.calc_shap_val_clusters(X_train, maxLabels)
-    for ix3, cluster_shap in enumerate(shap_values3):
-        shap_class.plot_summary(cluster_shap, Xs[ix3])  # force plot alpa bar plot zameni ta je shit
+    #for ix3, cluster_shap in enumerate(shap_values3):
+    #    shap_class.plot_summary(cluster_shap, Xs[ix3])  # force plot alpa bar plot zameni ta je shit
 
     # testne primere klasificiraj in vmesti v gruco
+    s1 = [s1,xgb_class.predict_xgb(s1.reshape(1, -1)),maxModel.predict(s1.reshape(1, -1)),shap_class.calc_shap_val(np.reshape(s1, (1, -1)))]
+    s2 = [s2,xgb_class.predict_xgb(s2.reshape(1, -1)),maxModel.predict(s2.reshape(1, -1)),shap_class.calc_shap_val(np.reshape(s2, (1, -1)))]
+    s3 = [s3,xgb_class.predict_xgb(s3.reshape(1, -1)),maxModel.predict(s3.reshape(1, -1)),shap_class.calc_shap_val(np.reshape(s3, (1, -1)))]
+    s4 = [s4,xgb_class.predict_xgb(s4.reshape(1, -1)),maxModel.predict(s4.reshape(1, -1)),shap_class.calc_shap_val(np.reshape(s4, (1, -1)))]
+    s5 = [s5,xgb_class.predict_xgb(s5.reshape(1, -1)),maxModel.predict(s5.reshape(1, -1)),shap_class.calc_shap_val(np.reshape(s5, (1, -1)))]
 
+    sample_array = [s1,s2,s3,s4,s5]
+    
     # compare cluster of current sample to others, zracunaj ksne razdalje?
+    for sample in sample_array:
+        sample_cluster = sample[2][0]
+        sample_class = sample[1][0]
+        sample_shap = sample[3]
+        cluster_class_probs = probs[sample_cluster]
+        cluster_medoid = medoids[sample_cluster]
+        cluster_rules = pravilaOut[sample_cluster]
+        cluster_rules_acc = accuracyOut[sample_cluster]
+        print('Algoritem ' + clustering_algo.name + ' je nasel ' + str(len(np.unique(maxLabels))) + ' gruc')
+        print('---')
+        print('Nov primer spada v gruco ' + str(sample_cluster))
+        print('---')
+        print('Pravila, ki gruco ' + str(sample_cluster) + ' locijo od vseh ostalih:')
+        print(cluster_rules)
+        print('Precision, Recall:')
+        print(cluster_rules_acc)
+        print('---')
+        print('Verjetnosti razredov v posamezni gruci')
+        for ix, prob in enumerate(probs):
+            print(ix, prob)
+        print('---')
+        print('Medoidi vseh gruc -> glej verjetnosti zgoraj za oceno verodostojnosti')
+        for ix, medoid in enumerate(medoids):
+            print(ix, medoid)
+        print('---')
+        # slika
+        print('SHAP vrednosti novega primera:')
+        print(sample_shap)
+        print('---')
+        print('SHAP ploti za vsako gruco')
+        for ix3, cluster_shap in enumerate(shap_values3):
+            # za predictan razred
+            shap_class.plot_summary(cluster_shap[sample_class], Xs[ix3])
+        print('---')
+        print('Pravila znotraj gruce za napovedani razred:')
+        for ix1 in range(len(pravilaIn[sample_cluster])):
+            for ix_rule in range(len(pravilaIn[sample_cluster][ix1])):
+                if pravilaIn[sample_cluster][ix1][ix_rule][0] == sample_class:
+                    print(pravilaIn[sample_cluster][ix1][ix_rule][1])
+                    print(accuracyIn[sample_cluster][ix1][ix_rule][1])
 
 
 def main1():
-    #test_clustering_algorithms()
+    test_clustering_algorithms()
     m1 = 'silhuette'
     m2 = 'dbcv'
-    subgroup_discovery_explanation(D8, cls.KMEANS(), m1)
+    #subgroup_discovery_explanation(D8, cls.KMEANS(), m1)
 
 
 # def main2():

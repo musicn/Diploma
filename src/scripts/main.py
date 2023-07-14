@@ -15,7 +15,8 @@ D5 = 'hearth_disease_2d'
 D6 = 'artificial_binary_2d_4'
 D7 = 'artificial_binary_5d_1'
 D8 = 'artificial_4c_2d_all'
-datasets = [D2] # D1,D2,D3,D4,D5,D6,D7
+D9 = 'density_binary_2d'
+datasets = [D9] # D1,D2,D3,D4,D5,D6,D7
 clustering_algos = [cls.HDBSCAN_C()] # cls.MDEC(),cls.KMEANS(),cls.DBSCAN_C(),cls.HDBSCAN_C()
 
 def get_data():

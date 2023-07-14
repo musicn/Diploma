@@ -17,6 +17,7 @@ class Data:
         self.DATASET6 = 'artificial_binary_2d_4'
         self.DATASET7 = 'artificial_binary_5d_1'
         self.DATASET8 = 'artificial_4c_2d_all'
+        self.DATASET9 = 'density_binary_2d'
 
     def construct(self, n_samples = 100):
         if self.dataset == self.DATASET1:
@@ -35,6 +36,8 @@ class Data:
             self.X, self.y = hf.construct_artificial_binary_5d_1()
         if self.dataset == self.DATASET8:
             self.X, self.y = hf.construct_artificial_4c_2d_all()
+        if self.dataset == self.DATASET9:
+            self.X, self.y = hf.construct_density_binary_2d()
 
     def plot(self):
         if self.dataset == self.DATASET1:
@@ -55,9 +58,11 @@ class Data:
             hf.plot2dUMAP_artificial_binary_5d_1(self.X, self.y)
         if self.dataset == self.DATASET8:
             hf.plot_artificial_4c_2d_all(self.X, self.y)
+        if self.dataset == self.DATASET9:
+            hf.plot_density_binary_2d(self.X, self.y)
 
 def main():
-    data_class = Data('artificial_4c_2d_all')
+    data_class = Data('density_binary_2d')
     data_class.construct()
     data_class.plot()
 

@@ -250,3 +250,22 @@ def plot_artificial_4c_2d_all(X, y):
     plt.title('Synthetic Dataset 3 classes - multiconcepts')
     plt.colorbar()
     plt.show()
+
+### density test dataset
+
+def construct_density_binary_2d():
+    data = read_txt('D:\\FRI\\Diploma\\data\\density_data.txt')
+    for ix, row in enumerate(data):
+        data[ix] = data[ix].replace('\n', '').split(', ')
+    X = np.array(data)[:,:2].astype(np.float64)
+    y = np.array(data)[:,2].astype(np.int64)
+    return X, y
+
+def plot_density_binary_2d(X, y):
+    plt.figure(figsize=(8, 6))
+    plt.scatter(X[:, 0], X[:, 1], c=y, cmap='coolwarm')
+    plt.xlabel('Feature 1')
+    plt.ylabel('Feature 2')
+    plt.title('Density Binary Dataset - 2D')
+    plt.colorbar()
+    plt.show()

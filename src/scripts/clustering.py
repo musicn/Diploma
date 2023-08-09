@@ -135,6 +135,27 @@ class MDEC:
         plt.colorbar()
         plt.show()
 
+    def plotTSNE(self, X_embedded):
+        plt.subplot(1,3,1)
+        plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=self.result_MDEC_HC, cmap='coolwarm')
+        plt.xlabel('feat1')
+        plt.ylabel('feat2')
+        plt.title('MDEC_HC')
+        plt.colorbar()
+        plt.subplot(1,3,2)
+        plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=self.result_MDEC_SC, cmap='coolwarm')
+        plt.xlabel('feat1')
+        plt.ylabel('feat2')
+        plt.title('MDEC_SC')
+        plt.colorbar()
+        plt.subplot(1,3,3)
+        plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=self.result_MDEC_BG, cmap='coolwarm')
+        plt.xlabel('feat1')
+        plt.ylabel('feat2')
+        plt.title('MDEC_BG')
+        plt.colorbar()
+        plt.show()
+
     def quit(self):
         self.eng.quit()
 
@@ -170,7 +191,7 @@ class KMEANS:
 
     def evaluate_dbcv(self):
         try:
-            return [validity.validity_index(self.X, self.labels)]
+            return [validity.validity_index(self.X, self.labels[0])]
         except ValueError:  #raised if `y` is empty.
             #print('poglej X in results')
             return [-9999]
@@ -182,7 +203,7 @@ class KMEANS:
         self.centers = []
 
     def plot(self):
-        scatter = plt.scatter(self.X[:,0], self.X[:,1], c=self.labels)
+        scatter = plt.scatter(self.X[:,0], self.X[:,1], c=self.labels[0])
         plt.xlabel('feat1')
         plt.ylabel('feat2')
         plt.title('KMEANS')
@@ -195,6 +216,14 @@ class KMEANS:
 
     def plotUMAP(self):
         print('not implemented')
+
+    def plotTSNE(self, X_embedded):
+        plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=self.labels[0], cmap='coolwarm')
+        plt.xlabel('feat1')
+        plt.ylabel('feat2')
+        plt.title('KMEANS')
+        plt.colorbar()
+        plt.show()
 
     def quit(self):
         print('not implemented')
@@ -233,7 +262,7 @@ class DBSCAN_C:
             elbow_point = kneedle.elbow
             # print('Elbow: ', knee_point)
             # print('Knee: ', knee_point)
-            # kneedle.plot_knee()
+            kneedle.plot_knee()
             eps = distances[int(round(elbow_point))]  # Maximum distance between samples for them to be considered neighbors
             x_range_unit = (0.05 * (len(distances) - 1)) / 9
             eps = distances[int(round(elbow_point)) + int(round(x_range_unit * (num_clusters - 6)))]
@@ -268,9 +297,9 @@ class DBSCAN_C:
             #X_filtered = self.X[valid_indices]
             #labels_filtered = self.labels[ix][self.labels[ix] != -1]
             try:
-                dbcv_score = validity.validity_index(self.X, self.labels[ix])
-            except ValueError:  #raised if `y` is empty.
-                #print('poglej X in results')
+                dbcv_score = validity.validity_index(self.X.astype(np.double), self.labels[ix])
+            except ValueError as ve:  #raised if `y` is empty.
+                print(ve)
                 dbcv_score = -9999
             ret.append(dbcv_score)
         return ret
@@ -298,6 +327,18 @@ class DBSCAN_C:
 
     def plotUMAP(self):
         print('not implemented')
+
+    def plotTSNE(self, X_embedded):
+        for ix in range(9):
+            plt.subplot(3,3,ix+1)
+            scatter = plt.scatter(X_embedded[:,0], X_embedded[:,1], c=self.labels[ix], cmap='rainbow')
+            #plt.colorbar()
+            legend_handles, legend_labels = scatter.legend_elements()
+            plt.legend(legend_handles, legend_labels, loc='best')
+            plt.xlabel('feat1')
+            plt.ylabel('feat2')
+            plt.title('DBSCAN')
+        plt.show()
 
     def quit(self):
         print('not implemented')
@@ -352,7 +393,7 @@ class HDBSCAN_C:
             # X_filtered = self.X[valid_indices]
             # labels_filtered = self.labels[ix][self.labels[ix] != -1]
             try:
-                dbcv_score = validity.validity_index(self.X, self.labels[ix])
+                dbcv_score = validity.validity_index(self.X.astype(np.double), self.labels[ix])
             except ValueError:  #raised if `y` is empty.
                 #print('poglej X in results')
                 dbcv_score = -9999
@@ -390,6 +431,18 @@ class HDBSCAN_C:
 
     def plotUMAP(self):
         print('not implemented')
+
+    def plotTSNE(self, X_embedded):
+        for ix in range(9):
+            plt.subplot(3,3,ix+1)
+            scatter = plt.scatter(X_embedded[:,0], X_embedded[:,1], c=self.labels[ix], cmap='rainbow')
+            #plt.colorbar()
+            legend_handles, legend_labels = scatter.legend_elements()
+            plt.legend(legend_handles, legend_labels, loc='best')
+            plt.xlabel('feat1')
+            plt.ylabel('feat2')
+            plt.title('HDBSCAN')
+        plt.show()
 
     def quit(self):
         print('not implemented')

@@ -18,6 +18,8 @@ class Data:
         self.DATASET7 = 'artificial_binary_5d_1'
         self.DATASET8 = 'artificial_4c_2d_all'
         self.DATASET9 = 'density_binary_2d'
+        self.DATASET10 = 'simple_data'
+        self.DATASET11 = 'MNIST'
 
     def construct(self, n_samples = 100):
         if self.dataset == self.DATASET1:
@@ -38,6 +40,10 @@ class Data:
             self.X, self.y = hf.construct_artificial_4c_2d_all()
         if self.dataset == self.DATASET9:
             self.X, self.y = hf.construct_density_binary_2d()
+        if self.dataset == self.DATASET10:
+            self.X, self.y = hf.construct_simple()
+        if self.dataset == self.DATASET11:
+            self.X, self.y = hf.construct_MNIST()
 
     def plot(self):
         if self.dataset == self.DATASET1:
@@ -60,9 +66,13 @@ class Data:
             hf.plot_artificial_4c_2d_all(self.X, self.y)
         if self.dataset == self.DATASET9:
             hf.plot_density_binary_2d(self.X, self.y)
+        if self.dataset == self.DATASET10:
+            hf.plot_simple(self.X, self.y)
+        if self.dataset == self.DATASET11:
+            hf.plot_MNIST(self.X, self.y)
 
 def main():
-    data_class = Data('density_binary_2d')
+    data_class = Data('MNIST')
     data_class.construct()
     data_class.plot()
 

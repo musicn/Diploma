@@ -6,6 +6,8 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import make_classification
 from umap import UMAP
+from keras.datasets import mnist
+from sklearn.manifold import TSNE
 
 ### common functions
 
@@ -268,4 +270,46 @@ def plot_density_binary_2d(X, y):
     plt.ylabel('Feature 2')
     plt.title('Density Binary Dataset - 2D')
     plt.colorbar()
+    plt.show()
+
+### simple dataset
+
+def construct_simple():
+    data = read_txt('D:\\FRI\\Diploma\\data\\simple_data.txt')
+    for ix, row in enumerate(data):
+        data[ix] = data[ix].replace('\n', '').split(', ')
+    X = np.array(data)[:,:2].astype(np.float64)
+    y = np.array(data)[:,2].astype(np.int64)
+    return X, y
+
+def plot_simple(X, y):
+    plt.figure(figsize=(8, 6))
+    plt.scatter(X[:, 0], X[:, 1], c=y, cmap='coolwarm')
+    plt.xlabel('Feature 1')
+    plt.ylabel('Feature 2')
+    plt.title('Simple Binary Dataset - 2D')
+    plt.colorbar()
+    plt.show()
+
+### MNIST
+
+def construct_MNIST():
+    (train_X, train_y), (test_X, test_y) = mnist.load_data()
+    #return np.concatenate((train_X, test_X), axis=0), np.concatenate((train_y, test_y), axis=0)
+    return train_X.reshape(train_X.shape[0], -1), train_y
+
+def plot_MNIST(X, y):
+    # X_2d = UMAP().fit_transform(X)
+    # plt.scatter(X_2d[:, 0], X_2d[:, 1], c=y)
+    # plt.xlabel('UMAP1')
+    # plt.ylabel('UMAP2')
+    # plt.title('UMAP - 2D: MNIST')
+    # plt.show()
+
+    tsne = TSNE(n_components=2, random_state=42)  # You can adjust n_components and other parameters
+    X_embedded = tsne.fit_transform(X[:20000])
+    plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=y[:20000])
+    plt.xlabel('TSNE1')
+    plt.ylabel('TSNE2')
+    plt.title('TSNE - 2D: MNIST')
     plt.show()

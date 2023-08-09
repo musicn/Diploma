@@ -6,6 +6,7 @@ import cluster_explanation as ce
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score
 import numpy as np
+from sklearn.manifold import TSNE
 
 D1 = 'artificial_binary_3d_1'
 D2 = 'artificial_binary_2d_1'
@@ -16,7 +17,9 @@ D6 = 'artificial_binary_2d_4'
 D7 = 'artificial_binary_5d_1'
 D8 = 'artificial_4c_2d_all'
 D9 = 'density_binary_2d'
-datasets = [D9] # D1,D2,D3,D4,D5,D6,D7
+D10 = 'simple_data'
+D11 = 'MNIST'
+datasets = [D11] # D1,D2,D3,D4,D5,D6,D7
 clustering_algos = [cls.HDBSCAN_C()] # cls.MDEC(),cls.KMEANS(),cls.DBSCAN_C(),cls.HDBSCAN_C()
 
 def get_data():
@@ -73,11 +76,18 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
 
     # sample that will be explained
     random_int = np.random.randint(0, len(X_test)-1)
-    s1 = np.array([6.1,17.3])
-    s2 = np.array([6.0,3.3])
-    s3 = np.array([10.0,10.0])
-    s4 = np.array([14.0,15.3])
-    s5 = np.array([17.4,5.1])
+    ### od kompleksne pod množice
+    # s1 = np.array([6.1,17.3])
+    # s2 = np.array([6.0,3.3])
+    # s3 = np.array([10.0,10.0])
+    # s4 = np.array([14.0,15.3])
+    # s5 = np.array([17.4,5.1])
+    ### od simple pod množice
+    s1 = np.array([13,9])
+    s2 = np.array([21,12.7])
+    s3 = np.array([5,3])
+    s4 = np.array([0,0])
+    s5 = np.array([0,0])
     
     # train a model
     xgb_class = model.XGBOOST()
@@ -204,8 +214,10 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
         print('---')
         print('SHAP ploti za vsako gruco')
         for ix3, cluster_shap in enumerate(shap_values3):
-            # za predictan razred
-            shap_class.plot_summary(cluster_shap[sample_class], Xs[ix3])
+            # za predictan razred ... 3+ razredi
+            #shap_class.plot_summary(cluster_shap[sample_class], Xs[ix3])
+            # 2 razreda
+            shap_class.plot_summary(cluster_shap, Xs[ix3])
         print('---')
         print('Pravila znotraj gruce za napovedani razred:')
         for ix1 in range(len(pravilaIn[sample_cluster])):
@@ -215,11 +227,41 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
                     print(accuracyIn[sample_cluster][ix1][ix_rule][1])
 
 
+def mnist_cluster_test(dataset, clustering_algo, metric):
+    # pridobi podatke
+    data_class = data.Data(dataset)
+    data_class.construct()
+    #data_class.plot()
+    X = data_class.X[:10000]
+    y = data_class.y[:10000]
+    
+    tsne = TSNE(n_components=2, random_state=42)  # You can adjust n_components and other parameters
+    X_embedded = tsne.fit_transform(X)
+    
+    for ix3 in range(11):     
+        if ix3 < 2: continue
+        # izvedi
+        print('Cluster_num: ' + str(ix3))
+        clustering_algo.cluster(X_embedded, y, ix3)
+        # oceni
+        # silhuette_scores = clustering_algo.evaluate_silhuette_avg()
+        # for ix4, score in enumerate(silhuette_scores):
+        #     print(str(ix4) + ' - ' + 'silhuette_score: ' + str(score) + ' // %: ' + str(clustering_algo.percentage_explained[ix4]))
+        dbcv_scores = clustering_algo.evaluate_dbcv()
+        for ix5, score in enumerate(dbcv_scores):
+            print(str(ix5) + ' - ' + 'dbcv_score: ' + str(score) + ' // %: ' + str(clustering_algo.percentage_explained[ix5]))
+        # vizualiziraj
+        clustering_algo.plotTSNE(X_embedded)
+        # reset class attributes
+        clustering_algo.reset()
+        # DBSCAN doesnt need cluster_num specification
+
 def main1():
-    test_clustering_algorithms()
+    #test_clustering_algorithms()
     m1 = 'silhuette'
     m2 = 'dbcv'
-    #subgroup_discovery_explanation(D8, cls.KMEANS(), m1)
+    #subgroup_discovery_explanation(D10, cls.KMEANS(), m1)
+    mnist_cluster_test(D11, cls.MDEC(), m1)
 
 
 # def main2():

@@ -20,6 +20,8 @@ class Data:
         self.DATASET9 = 'density_binary_2d'
         self.DATASET10 = 'simple_data'
         self.DATASET11 = 'MNIST'
+        self.DATASET12 = 'KDD99'
+        self.DATASET13 = 'DIABETES'
 
     def construct(self, n_samples = 100):
         if self.dataset == self.DATASET1:
@@ -44,6 +46,10 @@ class Data:
             self.X, self.y = hf.construct_simple()
         if self.dataset == self.DATASET11:
             self.X, self.y = hf.construct_MNIST()
+        if self.dataset == self.DATASET12:
+            self.X, self.y = hf.construct_KDD99()
+        if self.dataset == self.DATASET13:
+            self.X, self.y = hf.construct_DIABETES()
 
     def plot(self):
         if self.dataset == self.DATASET1:
@@ -70,9 +76,13 @@ class Data:
             hf.plot_simple(self.X, self.y)
         if self.dataset == self.DATASET11:
             hf.plot_MNIST(self.X, self.y)
+        if self.dataset == self.DATASET12:
+            hf.plot_KDD99(self.X, self.y)
+        if self.dataset == self.DATASET13:
+            hf.plot_DIABETES(self.X, self.y)
 
 def main():
-    data_class = Data('MNIST')
+    data_class = Data('simple_data')
     data_class.construct()
     data_class.plot()
 

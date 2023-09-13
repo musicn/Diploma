@@ -5,9 +5,11 @@ from sklearn.decomposition import PCA
 from umap import UMAP
 
 class SHAP:
-    def __init__(self, model):
+    def __init__(self, model, mode, X_train):
         shap.initjs()
-        self.explainer = shap.TreeExplainer(model)
+        masker = shap.maskers.Independent(data = X_train)
+        if mode == 0: self.explainer = shap.TreeExplainer(model)
+        elif mode == 1: self.explainer = shap.LinearExplainer(model, masker=masker)
 
     def calc_shap_val(self, X_train):
         return self.explainer.shap_values(X_train)

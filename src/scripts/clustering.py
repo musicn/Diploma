@@ -25,6 +25,7 @@ class MDEC:
         self.result_MDEC_SC = None
         self.result_MDEC_BG = None
         self.percentage_explained = [1.0,1.0,1.0]
+        self.model = None
         self.name = 'MDEC'
 
     def cluster(self, data_matrix, target_var_vec, num_clusters=0):
@@ -234,6 +235,7 @@ class DBSCAN_C:
         self.labels = []
         self.core_samples = []
         self.percentage_explained = []
+        self.model = None
         self.name = 'DBSCAN'
 
     def cluster(self, data_matrix, target_var_vec, num_clusters=1):
@@ -262,18 +264,19 @@ class DBSCAN_C:
             elbow_point = kneedle.elbow
             # print('Elbow: ', knee_point)
             # print('Knee: ', knee_point)
-            kneedle.plot_knee()
+            # kneedle.plot_knee()
             eps = distances[int(round(elbow_point))]  # Maximum distance between samples for them to be considered neighbors
             x_range_unit = (0.05 * (len(distances) - 1)) / 9
             eps = distances[int(round(elbow_point)) + int(round(x_range_unit * (num_clusters - 6)))]
             dbscan = DBSCAN(eps=eps, min_samples=min_samples)
             dbscan.fit(self.X)
+            self.model = dbscan
             self.labels.append(dbscan.labels_)
             self.core_samples.append(dbscan.core_sample_indices_)
             self.percentage_explained.append(1 - (np.count_nonzero(dbscan.labels_ == -1)/len(dbscan.labels_)))
 
-    def get_labels(self):
-        return self.labels
+    def get_labels(self, ix):
+        return self.labels[ix]
     
     def evaluate_silhuette_avg(self):
         # points that have -1 are outliers and do not belong to any cluster -> throw them out
@@ -349,13 +352,15 @@ class HDBSCAN_C:
         self.labels = []
         self.n_clusters = []
         self.percentage_explained = []
+        self.model = None
         self.name = 'HDBSCAN'
 
     def cluster(self, data_matrix, target_var_vec, num_clusters=1):
         self.X = np.copy(data_matrix)
         for ix in range(9):
-            hdbscan_obj = HDBSCAN(min_cluster_size=(num_clusters*5), min_samples=(ix+2)*5)
+            hdbscan_obj = HDBSCAN(min_cluster_size=(num_clusters*5), min_samples=(ix+2)*5, prediction_data=True)
             labels = hdbscan_obj.fit_predict(self.X)
+            self.model = hdbscan_obj
             self.labels.append(labels)
             self.n_clusters.append(len(set(labels)) - 1)
             self.percentage_explained.append(1 - (np.count_nonzero(labels == -1)/len(labels)))

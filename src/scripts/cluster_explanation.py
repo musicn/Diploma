@@ -14,16 +14,17 @@ class RULES:
         self.accuracyOut = []
         self.rulesIn = []
         self.accuracyIn = []
-        
-
+        self.model = None
+    
     def calc_rules_outCluster(self, X, labels):
         if self.library_num == 0:
             for cluster in np.unique(labels):
                 # create target variable for individual cluster / all same cluster labels are set to one for this for loop
                 yc = (labels == cluster) * 1
+                count_method1 = np.count_nonzero(yc == 1)
                 # use SkopeRules to identify rules with a maximum of two comparison terms
                 # dodaj iteracijo cez max_depth -> tradeoff med globino in precision in recall
-                sr = SkopeRules(max_depth=4).fit(X, yc)
+                sr = SkopeRules(max_depth=None, max_depth_duplication=10,n_estimators=30).fit(X, yc)
                 # print best decision rule
                 print(cluster, sr.rules_[0][0])
                 self.rulesOut.append(sr.rules_[0][0])
@@ -96,7 +97,7 @@ class MEDOID:
             yc = (labels == cluster) * 1
             indices = np.where(yc == 1)[0]
             X1 = np.copy(X)
-            X1 = X1[indices,:]
+            X1 = X1[indices,:].astype(float)
             y1 = np.copy(y)
             y1 = y1[indices]
             if self.distance_metric == 'euclidean':    

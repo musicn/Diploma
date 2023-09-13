@@ -8,6 +8,12 @@ from sklearn.datasets import make_classification
 from umap import UMAP
 from keras.datasets import mnist
 from sklearn.manifold import TSNE
+from sklearn.datasets import fetch_kddcup99
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import LabelEncoder
+import anndata
+import scanpy as sc
 
 ### common functions
 
@@ -313,3 +319,83 @@ def plot_MNIST(X, y):
     plt.ylabel('TSNE2')
     plt.title('TSNE - 2D: MNIST')
     plt.show()
+
+### KDD99
+
+def construct_KDD99():
+    # data = fetch_kddcup99()
+    # data_df = pd.DataFrame(data.data, columns=data.feature_names)
+    # data_df['target'] = data.target
+    # data_df.drop_duplicates(keep='first', inplace = True)
+    # retain_classes = [b'back.', b'satan.', b'warezclient.']
+    # filtered_data_df = data_df[data_df['target'].isin(retain_classes)]
+    # categorical_columns = ['protocol_type', 'service', 'flag']
+    # data_df_encoded = pd.get_dummies(filtered_data_df, columns=categorical_columns)
+    # X = data_df_encoded.drop(columns=['target']).values
+    # y = data_df_encoded['target'].values
+    # label_encoder = LabelEncoder()
+    # y = label_encoder.fit_transform(y)
+    # return X, y
+    data = fetch_kddcup99()
+    data_df = pd.DataFrame(data.data, columns=data.feature_names)
+    data_df['target'] = data.target
+    data_df.drop_duplicates(keep='first', inplace = True)
+    categorical_columns = ['protocol_type', 'service', 'flag']
+    data_df_encoded = pd.get_dummies(data_df, columns=categorical_columns)
+    X = data_df_encoded.drop(columns=['target']).values
+    y = data_df_encoded['target'].values
+    random_indices = np.loadtxt("D:\\FRI\\Diploma\\random_indices4.txt", dtype=int)
+    X_subset = X[random_indices]
+    y_subset = y[random_indices]
+    for ix in range(len(y_subset)):
+        if y_subset[ix] == b'normal.':
+            y_subset[ix] = 0
+        else:
+            y_subset[ix] = 1
+    return X_subset.astype(float), y_subset.astype(int)
+
+
+def plot_KDD99(X, y):
+    # X_2d = UMAP().fit_transform(X)
+    # plt.scatter(X_2d[:, 0], X_2d[:, 1], c=y)
+    # plt.xlabel('UMAP1')
+    # plt.ylabel('UMAP2')
+    # plt.title('UMAP - 2D: KDD99')
+    # plt.show()
+
+    tsne = TSNE(n_components=2, random_state=42)  # You can adjust n_components and other parameters
+    X_embedded = tsne.fit_transform(X)
+    plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=y)
+    plt.xlabel('TSNE1')
+    plt.ylabel('TSNE2')
+    plt.title('TSNE - 2D: KDD99')
+    plt.show()
+
+### DIABETES
+
+def construct_DIABETES():
+    url = "https://ndownloader.figshare.com/files/26759658"
+
+    # Load the Tabula Muris bone marrow tissue dataset
+    bone_marrow_dataset = sc.read_10x_h5(url)
+    return 0
+
+
+def plot_DIABETES(X, y):
+    pca = PCA(n_components=2)
+    X_2d = pca.fit_transform(X)
+
+    # X_2d = UMAP().fit_transform(X)
+    plt.scatter(X_2d[:, 0], X_2d[:, 1], c=y)
+    plt.xlabel('UMAP1')
+    plt.ylabel('UMAP2')
+    plt.title('UMAP - 2D: KDD99')
+    plt.show()
+
+    # tsne = TSNE(n_components=2, random_state=42)  # You can adjust n_components and other parameters
+    # X_embedded = tsne.fit_transform(X)
+    # plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=y)
+    # plt.xlabel('TSNE1')
+    # plt.ylabel('TSNE2')
+    # plt.title('TSNE - 2D: DIABETES')
+    # plt.show()

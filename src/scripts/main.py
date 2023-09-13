@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score
 import numpy as np
 from sklearn.manifold import TSNE
+import hdbscan
 
 D1 = 'artificial_binary_3d_1'
 D2 = 'artificial_binary_2d_1'
@@ -19,6 +20,7 @@ D8 = 'artificial_4c_2d_all'
 D9 = 'density_binary_2d'
 D10 = 'simple_data'
 D11 = 'MNIST'
+D12 = 'KDD99'
 datasets = [D11] # D1,D2,D3,D4,D5,D6,D7
 clustering_algos = [cls.HDBSCAN_C()] # cls.MDEC(),cls.KMEANS(),cls.DBSCAN_C(),cls.HDBSCAN_C()
 
@@ -163,7 +165,7 @@ def subgroup_discovery_explanation(dataset, clustering_algo, metric):
     probs = prob_obj.get_probs()
 
     # shap for feature importance
-    shap_class = my_shap.SHAP(xgb_model)
+    shap_class = my_shap.SHAP(xgb_model, 0)
     # unseen sample
     shap_values1 = shap_class.calc_shap_val(np.reshape(X_test[random_int], (1, -1)))
     # medoids
@@ -256,12 +258,185 @@ def mnist_cluster_test(dataset, clustering_algo, metric):
         clustering_algo.reset()
         # DBSCAN doesnt need cluster_num specification
 
+def subgroup_discovery_explanation_KDD99(dataset, clustering_algo, metric):
+    # pridobi podatke
+    data_class = data.Data('KDD99')
+    data_class.construct()
+    # plotas z test podatki
+    #data_class.plot()
+    X = data_class.X
+    y = data_class.y
+    
+    # split train, test set if predicting
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
+
+    # brez test podatkov
+    tsne = TSNE(n_components=2, random_state=42)  # You can adjust n_components and other parameters
+    X_embedded = tsne.fit_transform(X_train)
+
+    # sample that will be explained
+    random_int = np.random.randint(0, len(X_test)-1)
+
+    
+    # train a model
+    log_reg_class = model.LOG_REG()
+    log_reg_class.fit_log_reg(X_train, y_train)
+    log_reg_model = log_reg_class.return_model()
+    
+    # predict X_test
+    y_pred = log_reg_class.predict_log_reg(X_test)
+
+    # Calculate classification accuracy
+    ca = accuracy_score(y_test, y_pred)
+    print("Classification Accuracy:", ca)
+
+    # Calculate F1 score
+    f1 = f1_score(y_test, y_pred, average='micro')
+    print("F1 Score:", f1)
+
+    # stevilo gruc
+    maxLabels = None
+    maxScore = -99999
+    maxModel = None
+    for ix1 in range(11): #11
+        if ix1 < 2: continue #2
+        
+        # ali moras normalizirat podatke? density based-niti ne distance based- mogoc
+
+        # gruci podatke
+        clustering_algo.cluster(X_embedded, y_train, ix1)
+        if ix1 == 2: clustering_algo.plotTSNE(X_embedded)
+
+        # izberi oznake najboljsega grucenja
+        if metric == 'silhuette':
+            silhuette_scores = clustering_algo.evaluate_silhuette_avg()
+            for ix2, score in enumerate(silhuette_scores):
+                if score > maxScore:
+                    maxScore = score
+                    maxLabels = clustering_algo.get_labels() # mdec brez argumentov / ostali -> ix2
+                    maxModel = clustering_algo.model
+        if metric == 'dbcv':
+            dbcv_scores = clustering_algo.evaluate_dbcv()
+            for ix2, score in enumerate(dbcv_scores):
+                if score > maxScore:
+                    maxScore = score
+                    maxLabels = clustering_algo.get_labels(ix2) # mdec brez argumentov / ostali -> ix2
+                    maxModel = clustering_algo.model
+        
+        clustering_algo.reset()
+
+    # filtriri -1 pr density based algoritmih !!!
+    valid_indices = maxLabels != -1
+    X_train = X_train[valid_indices]
+    maxLabels = maxLabels[valid_indices]
+    y_train = y_train[valid_indices]
+
+    # vsako gruco opisi s pravili (one vs all)
+    rl1 = ce.RULES(0)
+    rl1.calc_rules_outCluster(X_train, maxLabels)
+    pravilaOut = rl1.get_rules_outCluster()
+    accuracyOut = rl1.get_accuracy_outCluster()
+    # visual area of rules on plot
+    # mas predict opcijo
+
+    # razrede v gruci opisi s pravili, ce bo shit subgroup discovery -> pri sahovnici vec pravil
+    rl2 = ce.RULES(0)
+    rl2.calc_rules_inCLuster(X_train, y_train, maxLabels)
+    pravilaIn = rl2.get_rules_inCluster()
+    accuracyIn = rl2.get_accuracy_inCluster()
+    # mas predict opcijo
+
+    # za vsak cluster najdi medoid !!! add class variable!
+    med_obj = ce.MEDOID('euclidean')
+    med_obj.calc_medoid(X_train, y_train, maxLabels)
+    medoids = np.array(med_obj.get_medoid())
+
+    # class probabilities for every cluster
+    prob_obj = ce.CLASS_PROB()
+    prob_obj.calc_probs(y_train, maxLabels)
+    probs = prob_obj.get_probs()
+
+    # shap for feature importance
+    shap_class = my_shap.SHAP(log_reg_model, 1, X_train)
+    # unseen sample
+    shap_values1 = shap_class.calc_shap_val(np.reshape(X_test[random_int], (1, -1)))
+    # medoids
+    shap_values2 = shap_class.calc_shap_val(np.vstack(medoids[:,0]))
+    # clusters
+    shap_values3, Xs = shap_class.calc_shap_val_clusters(X_train, maxLabels)
+    #for ix3, cluster_shap in enumerate(shap_values3):
+    #    shap_class.plot_summary(cluster_shap, Xs[ix3])  # force plot alpa bar plot zameni ta je shit
+
+    # se enkrat pozenemo t-sne da lahko dobimo gruco novega primera
+    new_matrix = np.vstack((X_train, X_test[0]))
+    tsne = TSNE(n_components=2, random_state=42)  # You can adjust n_components and other parameters
+    new_sample = tsne.fit_transform(new_matrix)[-1]
+
+    shap_values1 = shap_class.calc_shap_val(np.reshape(new_matrix[-1], (1, -1)))
+    # testne primere klasificiraj in vmesti v gruco
+    #s1 = [new_matrix[-1],log_reg_class.predict_log_reg(new_matrix[-1].reshape(1, -1)),hdbscan.approximate_predict(maxModel, new_sample),shap_class.calc_shap_val(new_matrix[-1].reshape(1, -1))]
+    s1 = [new_matrix[-1]]
+    s1.append(log_reg_class.predict_log_reg(new_matrix[-1].reshape(1, -1)))
+    s1.append(hdbscan.approximate_predict(maxModel, np.array([new_sample])))
+    s1.append(shap_class.calc_shap_val(new_matrix[-1].reshape(1, -1)))
+    #s2 = [s2,log_reg_class.predict_log_reg(s2.reshape(1, -1)),hdbscan.approximate_predict(maxModel, s2.reshape(1, -1)),shap_class.calc_shap_val(np.reshape(s2, (1, -1)))]
+    #s3 = [s3,log_reg_class.predict_log_reg(s3.reshape(1, -1)),hdbscan.approximate_predict(maxModel, s3.reshape(1, -1)),shap_class.calc_shap_val(np.reshape(s3, (1, -1)))]
+    #s4 = [s4,log_reg_class.predict_log_reg(s4.reshape(1, -1)),hdbscan.approximate_predict(maxModel, s4.reshape(1, -1)),shap_class.calc_shap_val(np.reshape(s4, (1, -1)))]
+    #s5 = [s5,log_reg_class.predict_log_reg(s5.reshape(1, -1)),hdbscan.approximate_predict(maxModel, s5.reshape(1, -1)),shap_class.calc_shap_val(np.reshape(s5, (1, -1)))]
+
+    sample_array = [s1]#,s2,s3,s4,s5]
+    
+    # compare cluster of current sample to others, zracunaj ksne razdalje?
+    for sample in sample_array:
+        # sample_cluster = sample[2][0]
+        # sample_class = sample[1][0]
+        # sample_shap = sample[3]
+        # cluster_class_probs = probs[sample_cluster]
+        # cluster_medoid = medoids[sample_cluster]
+        # cluster_rules = pravilaOut[sample_cluster]
+        # cluster_rules_acc = accuracyOut[sample_cluster]
+        print('Algoritem ' + clustering_algo.name + ' je nasel ' + str(len(np.unique(maxLabels))) + ' gruc')
+        print('---')
+        #print('Nov primer spada v gruco ' + str(sample_cluster))
+        print('---')
+        #print('Pravila, ki gruco ' + str(sample_cluster) + ' locijo od vseh ostalih:')
+        #print(cluster_rules)
+        print('Precision, Recall:')
+        #print(cluster_rules_acc)
+        print('---')
+        print('Verjetnosti razredov v posamezni gruci')
+        for ix, prob in enumerate(probs):
+            print(ix, prob)
+        print('---')
+        print('Medoidi vseh gruc -> glej verjetnosti zgoraj za oceno verodostojnosti')
+        for ix, medoid in enumerate(medoids):
+            print(ix, medoid)
+        print('---')
+        # slika
+        print('SHAP vrednosti novega primera:')
+        #print(sample_shap)
+        print('---')
+        print('SHAP ploti za vsako gruco')
+        for ix3, cluster_shap in enumerate(shap_values3):
+            # za predictan razred ... 3+ razredi
+            #shap_class.plot_summary(cluster_shap[sample_class], Xs[ix3])
+            # 2 razreda
+            shap_class.plot_summary(cluster_shap, Xs[ix3])
+        print('---')
+        print('Pravila znotraj gruce za napovedani razred:')
+        # for ix1 in range(len(pravilaIn[sample_cluster])):
+        #     for ix_rule in range(len(pravilaIn[sample_cluster][ix1])):
+        #         if pravilaIn[sample_cluster][ix1][ix_rule][0] == sample_class:
+        #             print(pravilaIn[sample_cluster][ix1][ix_rule][1])
+        #             print(accuracyIn[sample_cluster][ix1][ix_rule][1])
+
 def main1():
     #test_clustering_algorithms()
     m1 = 'silhuette'
     m2 = 'dbcv'
     #subgroup_discovery_explanation(D10, cls.KMEANS(), m1)
-    mnist_cluster_test(D11, cls.MDEC(), m1)
+    #mnist_cluster_test(D11, cls.MDEC(), m1)
+    subgroup_discovery_explanation_KDD99(D12, cls.HDBSCAN_C(), m2)
 
 
 # def main2():

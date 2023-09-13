@@ -1,0 +1,3 @@
+Pri obeh parametrih smo poskusili tudi okoliške vrednosti, ki so bile določene po naslednjih formulah: \\
+min samples = 2 * dim \\
+min samples = min samples + (int(round((ix-3) * (0.2 * min samples)))), kjer je ix celo število na intervalu [0,8] \\
